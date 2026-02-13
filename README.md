@@ -31,3 +31,9 @@ Supabase triggers multiple auth events during startup, leading to duplicate real
 
 Solution:
 I added a guard to ensure the realtime channel is created only once.
+
+6. OAuth Redirect Issue After Vercel Deployment (Redirecting to localhost:3000)
+After deploying the application to Vercel, signing in with Google OAuth redirected users back to http://localhost:3000 instead of the production URL. This happened because the authentication redirect URLs were still configured for local development.
+
+Solution:
+I updated the Supabase Authentication → URL Configuration settings to include the Vercel production domain and ensured the correct redirectTo URL was used during OAuth sign-in. Once the production URL was added alongside http://localhost:3000, authentication redirects worked correctly in both development and production environments.
