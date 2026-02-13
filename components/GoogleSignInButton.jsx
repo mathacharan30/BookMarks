@@ -6,10 +6,14 @@ export default function GoogleSignInButton() {
   const supabase = createClient()
 
   const handleGoogleSignIn = async () => {
+    const redirectUrl = typeof window !== 'undefined' 
+      ? `${window.location.origin}/auth/callback`
+      : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://book-marks-three.vercel.app'}/auth/callback`
+    
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${location.origin}/auth/callback`,
+        redirectTo: redirectUrl,
       },
     })
   }
