@@ -1,28 +1,27 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import BookmarkItem from './BookmarkItem'
 
 export default function BookmarksList({ initialBookmarks, userId }) {
     const [bookmarks, setBookmarks] = useState(initialBookmarks)
     const [connectionStatus, setConnectionStatus] = useState('connecting')
+    const channelRef = useRef(null)
 
     useEffect(() => {
         const supabase = createClient()
-        let channel = null
 
         const {
             data: { subscription },
         } = supabase.auth.onAuthStateChange((event, session) => {
             if (!session) return
 
-            // 🔥 prevent duplicate realtime subscriptions
-            if (channel) return
+            if (channelRef.current) return
 
             console.log("✅ Starting realtime only once")
 
-            channel = supabase
+            channelRef.current = supabase
                 .channel('bookmarks_realtime')
                 .on(
                     'postgres_changes',
@@ -66,7 +65,10 @@ export default function BookmarksList({ initialBookmarks, userId }) {
 
         return () => {
             subscription.unsubscribe()
-            if (channel) supabase.removeChannel(channel)
+            if (channelRef.current) {
+                supabase.removeChannel(channelRef.current)
+                channelRef.current = null
+            }
         }
     }, [])
 

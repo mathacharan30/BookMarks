@@ -13,7 +13,6 @@ export default async function Dashboard() {
     redirect('/')
   }
 
-  // Fetch initial bookmarks
   const { data: bookmarks } = await supabase
     .from('bookmarks')
     .select('*')
