@@ -30,5 +30,3 @@ CREATE POLICY "Users can delete their own bookmarks"
 
 CREATE INDEX bookmarks_user_id_idx ON bookmarks(user_id);
 CREATE INDEX bookmarks_created_at_idx ON bookmarks(created_at DESC);
-
-

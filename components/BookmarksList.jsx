@@ -91,29 +91,6 @@ export default function BookmarksList({ initialBookmarks, userId }) {
     if (bookmarks.length === 0) {
         return (
             <>
-                {(connectionStatus === 'CLOSED' || connectionStatus === 'CHANNEL_ERROR') && (
-                    <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                        <div className="flex items-start gap-3">
-                            <span className="text-2xl">⚠️</span>
-                            <div className="flex-1">
-                                <h3 className="font-semibold text-red-900 mb-1">Real-time Sync Disabled</h3>
-                                <p className="text-sm text-red-800 mb-2">
-                                    The app will work, but changes won't sync automatically across tabs.
-                                </p>
-                                <details className="text-xs text-red-700">
-                                    <summary className="cursor-pointer font-medium hover:underline">How to fix this</summary>
-                                    <ol className="mt-2 ml-4 space-y-1 list-decimal">
-                                        <li>Go to your Supabase Dashboard</li>
-                                        <li>Navigate to <strong>Database → Replication</strong></li>
-                                        <li>Find the <strong>bookmarks</strong> table</li>
-                                        <li>Toggle <strong>Realtime</strong> to <strong>ON</strong></li>
-                                        <li>Refresh this page</li>
-                                    </ol>
-                                </details>
-                            </div>
-                        </div>
-                    </div>
-                )}
                 <div className="text-center py-12 sm:py-16 bg-white rounded-lg border-2 border-dashed border-gray-300">
                     <div className="inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 bg-blue-50 rounded-2xl mb-4">
                       <svg className="w-10 h-10 sm:w-12 sm:h-12 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
@@ -129,40 +106,7 @@ export default function BookmarksList({ initialBookmarks, userId }) {
 
     return (
         <>
-            {(connectionStatus === 'CLOSED' || connectionStatus === 'CHANNEL_ERROR') && (
-                <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                    <div className="flex items-start gap-3">
-                        <span className="text-2xl">⚠️</span>
-                        <div className="flex-1">
-                            <h3 className="font-semibold text-red-900 mb-1">Real-time Sync Disabled</h3>
-                            <p className="text-sm text-red-800 mb-2">
-                                Changes won't sync automatically across browser tabs.
-                            </p>
-                            <details className="text-xs text-red-700">
-                                <summary className="cursor-pointer font-medium hover:underline">How to fix this</summary>
-                                <ol className="mt-2 ml-4 space-y-1 list-decimal">
-                                    <li>Go to your Supabase Dashboard</li>
-                                    <li>Navigate to <strong>Database → Replication</strong></li>
-                                    <li>Find the <strong>bookmarks</strong> table</li>
-                                    <li>Toggle <strong>Realtime</strong> to <strong>ON</strong></li>
-                                    <li>Refresh this page</li>
-                                </ol>
-                                <p className="mt-2">
-                                    <a
-                                        href="https://github.com/supabase/supabase/discussions"
-                                        target="_blank"
-                                        rel="noopener noreferrer"
-                                        className="text-red-800 underline hover:text-red-900"
-                                    >
-                                        Still having issues? Get help →
-                                    </a>
-                                </p>
-                            </details>
-                        </div>
-                    </div>
-                </div>
-            )}
-
+            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {bookmarks.map((bookmark) => (
                     <BookmarkItem
