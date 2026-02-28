@@ -1,21 +1,16 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
 
 export default function GoogleSignInButton() {
-  const supabase = createClient()
-
   const handleGoogleSignIn = async () => {
-    const redirectUrl = typeof window !== 'undefined' 
-      ? `${window.location.origin}/auth/callback`
-      : `${process.env.NEXT_PUBLIC_SITE_URL || 'https://book-marks-three.vercel.app'}/auth/callback`
-    
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: redirectUrl,
-      },
-    })
+    try {
+      const provider = new GoogleAuthProvider()
+      await signInWithPopup(auth, provider)
+    } catch (error) {
+      console.error('Error signing in with Google:', error)
+    }
   }
 
   return (

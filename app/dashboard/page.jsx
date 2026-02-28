@@ -1,22 +1,59 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/lib/firebase/auth-context'
+import { db } from '@/lib/firebase/config'
+import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore'
 import BookmarksList from '@/components/BookmarksList'
 import AddBookmarkForm from '@/components/AddBookmarkForm'
 import SignOutButton from '@/components/SignOutButton'
 
-export default async function Dashboard() {
-  const supabase = await createClient()
-  
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) {
-    redirect('/')
+export default function Dashboard() {
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const [bookmarks, setBookmarks] = useState([])
+  const [dataLoading, setDataLoading] = useState(true)
+
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/')
+    }
+  }, [user, loading, router])
+
+  useEffect(() => {
+    if (!user) return
+
+    const q = query(
+      collection(db, 'bookmarks'),
+      where('user_id', '==', user.uid),
+      orderBy('created_at', 'desc')
+    )
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const bookmarksData = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }))
+      setBookmarks(bookmarksData)
+      setDataLoading(false)
+    }, (error) => {
+      console.error('Error fetching bookmarks:', error)
+      setDataLoading(false)
+    })
+
+    return () => unsubscribe()
+  }, [user])
+
+  if (loading || dataLoading) {
+    return (
+      <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </main>
+    )
   }
 
-  const { data: bookmarks } = await supabase
-    .from('bookmarks')
-    .select('*')
-    .order('created_at', { ascending: false })
+  if (!user) return null
 
   return (
     <main className="min-h-screen bg-gray-50 pb-20">
@@ -51,7 +88,7 @@ export default async function Dashboard() {
             </svg>
             Add New Bookmark
           </h2>
-          <AddBookmarkForm userId={user.id} />
+          <AddBookmarkForm userId={user.uid} />
         </div>
 
         {/* Bookmarks Count */}
@@ -62,7 +99,7 @@ export default async function Dashboard() {
         </div>
 
         {/* Bookmarks Grid */}
-        <BookmarksList initialBookmarks={bookmarks || []} userId={user.id} />
+        <BookmarksList bookmarks={bookmarks} />
       </div>
     </main>
   )

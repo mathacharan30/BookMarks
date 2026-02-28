@@ -1,16 +1,19 @@
 'use client'
 
-import { createClient } from '@/lib/supabase/client'
+import { signOut } from 'firebase/auth'
+import { auth } from '@/lib/firebase/config'
 import { useRouter } from 'next/navigation'
 
 export default function SignOutButton() {
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut()
-    router.push('/')
-    router.refresh()
+    try {
+      await signOut(auth)
+      router.push('/')
+    } catch (error) {
+      console.error('Error signing out:', error)
+    }
   }
 
   return (

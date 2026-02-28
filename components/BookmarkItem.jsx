@@ -15,8 +15,10 @@ export default function BookmarkItem({ bookmark, onDelete }) {
     setDeleting(false)
   }
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
+  const formatDate = (timestamp) => {
+    if (!timestamp) return ''
+    // Handle Firestore Timestamp objects
+    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp)
     return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',

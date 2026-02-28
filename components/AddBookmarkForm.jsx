@@ -1,13 +1,13 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { db } from '@/lib/firebase/config'
+import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
 
 export default function AddBookmarkForm({ userId }) {
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [loading, setLoading] = useState(false)
-  const supabase = createClient()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -19,22 +19,19 @@ export default function AddBookmarkForm({ userId }) {
 
     setLoading(true)
 
-    const { error } = await supabase
-      .from('bookmarks')
-      .insert([
-        {
-          user_id: userId,
-          title: title.trim(),
-          url: url.trim(),
-        },
-      ])
+    try {
+      await addDoc(collection(db, 'bookmarks'), {
+        user_id: userId,
+        title: title.trim(),
+        url: url.trim(),
+        created_at: serverTimestamp(),
+      })
 
-    if (error) {
-      console.error('Error adding bookmark:', error)
-      alert('Failed to add bookmark')
-    } else {
       setTitle('')
       setUrl('')
+    } catch (error) {
+      console.error('Error adding bookmark:', error)
+      alert('Failed to add bookmark')
     }
 
     setLoading(false)

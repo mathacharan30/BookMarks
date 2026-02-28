@@ -1,88 +1,14 @@
 'use client'
 
-import { useEffect, useState, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { db } from '@/lib/firebase/config'
+import { doc, deleteDoc } from 'firebase/firestore'
 import BookmarkItem from './BookmarkItem'
 
-export default function BookmarksList({ initialBookmarks, userId }) {
-    const [bookmarks, setBookmarks] = useState(initialBookmarks)
-    const [connectionStatus, setConnectionStatus] = useState('connecting')
-    const channelRef = useRef(null)
-
-    useEffect(() => {
-        const supabase = createClient()
-
-        const {
-            data: { subscription },
-        } = supabase.auth.onAuthStateChange((event, session) => {
-            if (!session) return
-
-            if (channelRef.current) return
-
-            console.log("✅ Starting realtime only once")
-
-            channelRef.current = supabase
-                .channel('bookmarks_realtime')
-                .on(
-                    'postgres_changes',
-                    {
-                        event: '*',
-                        schema: 'public',
-                        table: 'bookmarks',
-                    },
-                    (payload) => {
-                        console.log('Realtime event:', payload)
-
-                        if (payload.eventType === 'INSERT') {
-                            setBookmarks((current) => {
-                                const exists = current.find((b) => b.id === payload.new.id)
-                                if (exists) return current
-                                return [payload.new, ...current]
-                            })
-                        }
-
-                        if (payload.eventType === 'DELETE') {
-                            setBookmarks((current) =>
-                                current.filter((b) => b.id !== payload.old.id)
-                            )
-                        }
-
-                        if (payload.eventType === 'UPDATE') {
-                            setBookmarks((current) =>
-                                current.map((b) =>
-                                    b.id === payload.new.id ? payload.new : b
-                                )
-                            )
-                        }
-                    }
-
-                )
-                .subscribe((status) => {
-                    console.log('📡 Subscription status:', status)
-                    setConnectionStatus(status)
-                })
-        })
-
-        return () => {
-            subscription.unsubscribe()
-            if (channelRef.current) {
-                supabase.removeChannel(channelRef.current)
-                channelRef.current = null
-            }
-        }
-    }, [])
-
-
-
-
+export default function BookmarksList({ bookmarks }) {
     const handleDelete = async (id) => {
-        const supabase = createClient()
-        const { error } = await supabase
-            .from('bookmarks')
-            .delete()
-            .eq('id', id)
-
-        if (error) {
+        try {
+            await deleteDoc(doc(db, 'bookmarks', id))
+        } catch (error) {
             console.error('Error deleting bookmark:', error)
             alert('Failed to delete bookmark')
         }
