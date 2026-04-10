@@ -1,13 +1,13 @@
 'use client'
 
-import { db } from '@/lib/firebase/config'
-import { doc, deleteDoc } from 'firebase/firestore'
+import { supabase } from '@/lib/supabase/client'
 import BookmarkItem from './BookmarkItem'
 
 export default function BookmarksList({ bookmarks }) {
     const handleDelete = async (id) => {
         try {
-            await deleteDoc(doc(db, 'bookmarks', id))
+            const { error } = await supabase.from('bookmarks').delete().eq('id', id)
+            if (error) throw error
         } catch (error) {
             console.error('Error deleting bookmark:', error)
             alert('Failed to delete bookmark')
@@ -32,7 +32,6 @@ export default function BookmarksList({ bookmarks }) {
 
     return (
         <>
-            
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {bookmarks.map((bookmark) => (
                     <BookmarkItem

@@ -1,7 +1,7 @@
 import { Montserrat } from 'next/font/google'
 import './globals.css'
 import Footer from '@/components/Footer'
-import { AuthProvider } from '@/lib/firebase/auth-context'
+import { AuthProvider } from '@/lib/supabase/auth-context'
 
 const montserrat = Montserrat({ 
   weight: ['300', '400', '500', '600', '700', '800'],

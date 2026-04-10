@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/lib/firebase/auth-context'
-import { db } from '@/lib/firebase/config'
-import { collection, query, where, orderBy, onSnapshot } from 'firebase/firestore'
+import { useAuth } from '@/lib/supabase/auth-context'
+import { supabase } from '@/lib/supabase/client'
 import BookmarksList from '@/components/BookmarksList'
 import AddBookmarkForm from '@/components/AddBookmarkForm'
 import SignOutButton from '@/components/SignOutButton'
@@ -24,25 +23,39 @@ export default function Dashboard() {
   useEffect(() => {
     if (!user) return
 
-    const q = query(
-      collection(db, 'bookmarks'),
-      where('user_id', '==', user.uid),
-      orderBy('created_at', 'desc')
-    )
+    const fetchBookmarks = async () => {
+      const { data, error } = await supabase
+        .from('bookmarks')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
 
-    const unsubscribe = onSnapshot(q, (snapshot) => {
-      const bookmarksData = snapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }))
-      setBookmarks(bookmarksData)
+      if (!error) setBookmarks(data || [])
       setDataLoading(false)
-    }, (error) => {
-      console.error('Error fetching bookmarks:', error)
-      setDataLoading(false)
-    })
+    }
 
-    return () => unsubscribe()
+    fetchBookmarks()
+
+    const channel = supabase
+      .channel('bookmarks-changes')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'bookmarks',
+        filter: `user_id=eq.${user.id}`,
+      }, (payload) => {
+        setBookmarks((prev) => [payload.new, ...prev])
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'bookmarks',
+      }, (payload) => {
+        setBookmarks((prev) => prev.filter((b) => b.id !== payload.old.id))
+      })
+      .subscribe()
+
+    return () => supabase.removeChannel(channel)
   }, [user])
 
   if (loading || dataLoading) {
@@ -88,7 +101,7 @@ export default function Dashboard() {
             </svg>
             Add New Bookmark
           </h2>
-          <AddBookmarkForm userId={user.uid} />
+          <AddBookmarkForm userId={user.id} />
         </div>
 
         {/* Bookmarks Count */}

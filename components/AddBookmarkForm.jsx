@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { db } from '@/lib/firebase/config'
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore'
+import { supabase } from '@/lib/supabase/client'
 
 export default function AddBookmarkForm({ userId }) {
   const [title, setTitle] = useState('')
@@ -11,7 +10,7 @@ export default function AddBookmarkForm({ userId }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!title.trim() || !url.trim()) {
       alert('Please fill in both fields')
       return
@@ -20,12 +19,13 @@ export default function AddBookmarkForm({ userId }) {
     setLoading(true)
 
     try {
-      await addDoc(collection(db, 'bookmarks'), {
+      const { error } = await supabase.from('bookmarks').insert({
         user_id: userId,
         title: title.trim(),
         url: url.trim(),
-        created_at: serverTimestamp(),
       })
+
+      if (error) throw error
 
       setTitle('')
       setUrl('')
